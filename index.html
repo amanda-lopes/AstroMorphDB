@@ -71,14 +71,11 @@
             color: #9cd9f0;
         }
         
-        .redshift {
+        .z {
             color: #b5e6b5;
             font-weight: 500;
         }
         
-        .r50 {
-            color: #f7c5a8;
-        }
         
         .footer {
             margin-top: 20px;
@@ -141,19 +138,6 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌌 Astromorphlib Database </h1>
-        
-        <div style="margin-bottom: 20px;">
-            <input type="text" id="searchInput" class="search-box" placeholder="Search by any field..." onkeyup="filterTable()">
-            <button class="load-btn" onclick="loadCSV()">🔄 Reload Data</button>
-        </div>
-        
-        <div id="stats" class="stats">
-            Loading data...
-        </div>
-        
-        <div id="errorMessage" class="error" style="display: none;"></div>
         
         <div style="overflow-x: auto;">
             <table id="objectsTable">
