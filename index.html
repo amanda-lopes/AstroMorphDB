@@ -71,14 +71,11 @@
             color: #9cd9f0;
         }
         
-        .redshift {
+        .z {
             color: #b5e6b5;
             font-weight: 500;
         }
         
-        .r50 {
-            color: #f7c5a8;
-        }
         
         .footer {
             margin-top: 20px;
@@ -300,7 +297,7 @@
         }
 
         function sortData(columnIndex, display = true) {
-            const headers = ['Name', 'RA(deg)', 'DEC(deg)', 'z'];
+            const headers = ['Name', 'RA (deg)', 'DEC (deg)', 'z'];
             const columnName = headers[columnIndex];
             
             filteredData.sort((a, b) => {
