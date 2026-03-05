@@ -158,49 +158,30 @@
             const tableBody = document.getElementById('tableBody');
             const errorDiv = document.getElementById('errorMessage');
             const statsDiv = document.getElementById('stats');
-            
-            try {
-                // Show loading state
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">⏳ Loading CSV data...</td></tr>';
-                errorDiv.style.display = 'none';
                 
-                // Fetch the CSV file
-                const response = await fetch('data.csv');
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+            // Fetch the CSV file
+            const response = await fetch('data.csv');                    
                 
-                const csvText = await response.text();
-                
-                // Parse CSV
+            // Parse CSV
                 const rows = csvText.trim().split('\n');
                 const headers = rows[0].split(',').map(h => h.trim());
                 
-                // Parse data rows
-                originalData = rows.slice(1).map(row => {
-                    const values = row.split(',').map(v => v.trim());
-                    return headers.reduce((obj, header, index) => {
-                        obj[header] = values[index];
-                        return obj;
+            // Parse data rows
+            originalData = rows.slice(1).map(row => {
+                const values = row.split(',').map(v => v.trim());
+                return headers.reduce((obj, header, index) => {
+                    obj[header] = values[index];
+                    return obj;
                     }, {});
                 });
         
+            displayData(originalData)
                 
+            // Update footer
+            document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
                 
-                // Update footer
-                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
-                
-            } catch (error) {
-                console.error('Error loading CSV:', error);
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = `❌ Error loading CSV: ${error.message}. Make sure data.csv exists in the same directory.`;
-                statsDiv.innerHTML = '❌ Failed to load data';
-                
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 50px; color: #ff8a8a;">
-                    ❌ Error loading data. Please check console.
-                </td></tr>`;
-            }
+            } 
         }
 
         function displayData(data) {
