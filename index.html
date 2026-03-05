@@ -187,6 +187,8 @@
 
         async function loadCSV() {
             const tableBody = document.getElementById('tableBody');
+            const errorDiv = document.getElementById('errorMessage');
+            const statsDiv = document.getElementById('stats');
             
             try {                
                 // Fetch the CSV file
