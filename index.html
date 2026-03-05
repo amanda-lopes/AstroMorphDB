@@ -71,11 +71,14 @@
             color: #9cd9f0;
         }
         
-        .z {
+        .redshift {
             color: #b5e6b5;
             font-weight: 500;
         }
         
+        .r50 {
+            color: #f7c5a8;
+        }
         
         .footer {
             margin-top: 20px;
@@ -86,6 +89,20 @@
             font-size: 0.8em;
         }
         
+        .search-box {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 300px;
+            border-radius: 4px;
+            border: 1px solid #4a6fa5;
+            background-color: #1a1f2e;
+            color: #e0e0e0;
+            font-size: 1em;
+        }
+        
+        .search-box::placeholder {
+            color: #888;
+        }
         
         .stats {
             background-color: #1a1f2e;
@@ -125,16 +142,30 @@
 </head>
 <body>
     <div class="container">
-        <h1>🌌 Astromorphlib Database</h1>
+        <h1>🌌 Astromorphlib Database </h1>
+        
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" class="search-box" placeholder="Search by any field..." onkeyup="filterTable()">
+            <button class="load-btn" onclick="loadCSV()">🔄 Reload Data</button>
+        </div>
+        
+        <div id="stats" class="stats">
+            Loading data...
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
         
         <div style="overflow-x: auto;">
             <table id="objectsTable">
                 <thead id="tableHeader">
                     <tr>
-                        <th onclick="sortTable(0)">Name</th>
-                        <th onclick="sortTable(1)">RA (deg)</th>
-                        <th onclick="sortTable(2)">DEC (deg)</th>
-                        <th onclick="sortTable(3)">z</th>
+                        <th onclick="sortTable(0)">SNAME</th>
+                        <th onclick="sortTable(1)">Name</th>
+                        <th onclick="sortTable(2)">Field</th>
+                        <th onclick="sortTable(3)">RA (degrees)</th>
+                        <th onclick="sortTable(4)">DEC (degrees)</th>
+                        <th onclick="sortTable(5)">Redshift</th>
+                        <th onclick="sortTable(6)">R50 (pix)</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -147,10 +178,15 @@
             </table>
         </div>
         
+        <div class="footer">
+            <span id="lastUpdated"></span>
+            <span>📊 <span id="objectCount">0</span> objects displayed | Source: data.csv</span>
+        </div>
     </div>
 
     <script>
         let originalData = [];
+        let filteredData = [];
         let sortColumn = -1;
         let sortDirection = 'asc';
 
@@ -158,30 +194,56 @@
             const tableBody = document.getElementById('tableBody');
             const errorDiv = document.getElementById('errorMessage');
             const statsDiv = document.getElementById('stats');
+            
+            try {
+                // Show loading state
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">⏳ Loading CSV data...</td></tr>';
+                errorDiv.style.display = 'none';
                 
+                // Fetch the CSV file
+                const response = await fetch('data.csv');
                 
-            // Fetch the CSV file
-            const response = await fetch('data.csv');                    
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
-            // Parse CSV
+                const csvText = await response.text();
+                
+                // Parse CSV
                 const rows = csvText.trim().split('\n');
                 const headers = rows[0].split(',').map(h => h.trim());
                 
-            // Parse data rows
-            originalData = rows.slice(1).map(row => {
-                const values = row.split(',').map(v => v.trim());
-                return headers.reduce((obj, header, index) => {
-                    obj[header] = values[index];
-                    return obj;
+                // Parse data rows
+                originalData = rows.slice(1).map(row => {
+                    const values = row.split(',').map(v => v.trim());
+                    return headers.reduce((obj, header, index) => {
+                        obj[header] = values[index];
+                        return obj;
                     }, {});
                 });
-        
-            displayData(originalData)
                 
-            // Update footer
-            document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
+                filteredData = [...originalData];
                 
-            } 
+                // Update stats
+                statsDiv.innerHTML = `✅ Successfully loaded ${originalData.length} objects from CSV`;
+                
+                // Display the data
+                displayData(filteredData);
+                
+                // Update footer
+                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
+                document.getElementById('objectCount').textContent = filteredData.length;
+                
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `❌ Error loading CSV: ${error.message}. Make sure data.csv exists in the same directory.`;
+                statsDiv.innerHTML = '❌ Failed to load data';
+                
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 50px; color: #ff8a8a;">
+                    ❌ Error loading data. Please check console.
+                </td></tr>`;
+            }
         }
 
         function displayData(data) {
@@ -198,12 +260,73 @@
                 html += `<td>${item.Name || ''}</td>`;
                 html += `<td class="coordinates">${item['RA(degrees)'] || ''}</td>`;
                 html += `<td class="coordinates">${item['DEC(degrees)'] || ''}</td>`;
-                html += `<td class="redshift">${item.z || ''}</td>`;
+                html += `<td class="z">${item.Redshift || ''}</td>`;
                 html += '</tr>';
             });
             
             tableBody.innerHTML = html;
             document.getElementById('objectCount').textContent = data.length;
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredData = [...originalData];
+            } else {
+                filteredData = originalData.filter(item => {
+                    return Object.values(item).some(value => 
+                        String(value).toLowerCase().includes(searchTerm)
+                    );
+                });
+            }
+            
+            // Apply current sort if any
+            if (sortColumn !== -1) {
+                sortData(sortColumn, false);
+            } else {
+                displayData(filteredData);
+            }
+        }
+
+        function sortTable(columnIndex) {
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            
+            if (sortColumn === columnIndex) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = columnIndex;
+                sortDirection = 'asc';
+            }
+            
+            sortData(columnIndex, true);
+        }
+
+        function sortData(columnIndex, display = true) {
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            const columnName = headers[columnIndex];
+            
+            filteredData.sort((a, b) => {
+                let valA = a[columnName];
+                let valB = b[columnName];
+                
+                // Try numeric comparison for numeric columns
+                if (columnIndex >= 1) { // Coordinates, z
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+                
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            if (display) {
+                displayData(filteredData);
+            }
         }
 
         // Auto-load CSV when page loads
