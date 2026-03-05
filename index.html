@@ -42,6 +42,18 @@
             font-size: 0.9em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        th:hover {
+            background-color: #3d4b5f;
+        }
+        
+        th:after {
+            content: ' ↕️';
+            font-size: 0.8em;
+            opacity: 0.5;
         }
         
         td {
@@ -70,7 +82,9 @@
         
         .footer {
             margin-top: 20px;
-            text-align: right;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             color: #888;
             font-size: 0.8em;
         }
@@ -83,10 +97,46 @@
             border: 1px solid #4a6fa5;
             background-color: #1a1f2e;
             color: #e0e0e0;
+            font-size: 1em;
         }
         
         .search-box::placeholder {
             color: #888;
+        }
+        
+        .stats {
+            background-color: #1a1f2e;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 3px solid #ffd966;
+        }
+        
+        .load-btn {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .load-btn:hover {
+            background-color: #5a7fb5;
+        }
+        
+        .error {
+            color: #ff8a8a;
+            background-color: #3f2b2b;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .sort-indicator {
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -94,70 +144,190 @@
     <div class="container">
         <h1>🌌 Astromorphlib Database</h1>
         
-        <input type="text" id="searchInput" class="search-box" placeholder="Search by name or field..." onkeyup="filterTable()">
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" class="search-box" placeholder="Search by any field..." onkeyup="filterTable()">
+            <button class="load-btn" onclick="loadCSV()">🔄 Reload Data</button>
+        </div>
         
-        <table id="objectsTable">
-            <thead>
-                <tr>
-                    <th>SNAME</th>
-                    <th>Name</th>
-                    <th>Field</th>
-                    <th>RA (degrees)</th>
-                    <th>DEC (degrees)</th>
-                    <th>Redshift</th>
-                    <th>R50 (pix)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>S00001</td>
-                    <td>NGC1344</td>
-                    <td>SPLUS-s24s34</td>
-                    <td class="coordinates">52.08196</td>
-                    <td class="coordinates">-31.06817</td>
-                    <td class="redshift">0.00414</td>
-                    <td class="r50">53.65902</td>
-                </tr>
-                <tr>
-                    <td>S00002</td>
-                    <td>ESO418-G008</td>
-                    <td>SPLUS-s24s35</td>
-                    <td class="coordinates">52.87771</td>
-                    <td class="coordinates">-30.21333</td>
-                    <td class="redshift">0.003987</td>
-                    <td class="r50">25.898617</td>
-                </tr>
-            </tbody>
-        </table>
+        <div id="stats" class="stats">
+            Loading data...
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <div style="overflow-x: auto;">
+            <table id="objectsTable">
+                <thead id="tableHeader">
+                    <tr>
+                        <th onclick="sortTable(0)">Name</th>
+                        <th onclick="sortTable(1)">RA (degrees)</th>
+                        <th onclick="sortTable(2)">DEC (degrees)</th>
+                        <th onclick="sortTable(3)">z</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 50px;">
+                            ⏳ Loading data from CSV...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         
         <div class="footer">
-            📊 2 objects displayed | Last updated: 2026-03-05
+            <span id="lastUpdated"></span>
+            <span>📊 <span id="objectCount">0</span> objects displayed | Source: data.csv</span>
         </div>
     </div>
 
     <script>
-        function filterTable() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toUpperCase();
-            const table = document.getElementById('objectsTable');
-            const tr = table.getElementsByTagName('tr');
+        let originalData = [];
+        let filteredData = [];
+        let sortColumn = -1;
+        let sortDirection = 'asc';
+
+        async function loadCSV() {
+            const tableBody = document.getElementById('tableBody');
+            const errorDiv = document.getElementById('errorMessage');
+            const statsDiv = document.getElementById('stats');
             
-            for (let i = 1; i < tr.length; i++) {
-                let display = false;
-                const tds = tr[i].getElementsByTagName('td');
-                for (let j = 0; j < tds.length; j++) {
-                    const td = tds[j];
-                    if (td) {
-                        const txtValue = td.textContent || td.innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            display = true;
-                            break;
-                        }
-                    }
+            try {
+                // Show loading state
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">⏳ Loading CSV data...</td></tr>';
+                errorDiv.style.display = 'none';
+                
+                // Fetch the CSV file
+                const response = await fetch('data.csv');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                tr[i].style.display = display ? '' : 'none';
+                
+                const csvText = await response.text();
+                
+                // Parse CSV
+                const rows = csvText.trim().split('\n');
+                const headers = rows[0].split(',').map(h => h.trim());
+                
+                // Parse data rows
+                originalData = rows.slice(1).map(row => {
+                    const values = row.split(',').map(v => v.trim());
+                    return headers.reduce((obj, header, index) => {
+                        obj[header] = values[index];
+                        return obj;
+                    }, {});
+                });
+                
+                filteredData = [...originalData];
+                
+                // Update stats
+                statsDiv.innerHTML = `✅ Successfully loaded ${originalData.length} objects from CSV`;
+                
+                // Display the data
+                displayData(filteredData);
+                
+                // Update footer
+                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
+                document.getElementById('objectCount').textContent = filteredData.length;
+                
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `❌ Error loading CSV: ${error.message}. Make sure data.csv exists in the same directory.`;
+                statsDiv.innerHTML = '❌ Failed to load data';
+                
+                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 50px; color: #ff8a8a;">
+                    ❌ Error loading data. Please check console.
+                </td></tr>`;
             }
         }
+
+        function displayData(data) {
+            const tableBody = document.getElementById('tableBody');
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">No matching objects found</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            data.forEach(item => {
+                html += '<tr>';
+                html += `<td>${item.Name || ''}</td>`;
+                html += `<td class="coordinates">${item['RA(degrees)'] || ''}</td>`;
+                html += `<td class="coordinates">${item['DEC(degrees)'] || ''}</td>`;
+                html += `<td class="redshift">${item.z || ''}</td>`;
+                html += '</tr>';
+            });
+            
+            tableBody.innerHTML = html;
+            document.getElementById('objectCount').textContent = data.length;
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredData = [...originalData];
+            } else {
+                filteredData = originalData.filter(item => {
+                    return Object.values(item).some(value => 
+                        String(value).toLowerCase().includes(searchTerm)
+                    );
+                });
+            }
+            
+            // Apply current sort if any
+            if (sortColumn !== -1) {
+                sortData(sortColumn, false);
+            } else {
+                displayData(filteredData);
+            }
+        }
+
+        function sortTable(columnIndex) {
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            
+            if (sortColumn === columnIndex) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = columnIndex;
+                sortDirection = 'asc';
+            }
+            
+            sortData(columnIndex, true);
+        }
+
+        function sortData(columnIndex, display = true) {
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            const columnName = headers[columnIndex];
+            
+            filteredData.sort((a, b) => {
+                let valA = a[columnName];
+                let valB = b[columnName];
+                
+                // Try numeric comparison for numeric columns
+                if (columnIndex >= 1) { // Coordinates, z
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+                
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            if (display) {
+                displayData(filteredData);
+            }
+        }
+
+        // Auto-load CSV when page loads
+        window.onload = loadCSV;
     </script>
 </body>
 </html>
