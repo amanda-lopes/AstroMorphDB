@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astromorphlib Database</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #0a0f1e;
+            color: #e0e0e0;
+        }
+        
+        h1 {
+            color: #ffd966;
+            border-bottom: 2px solid #4a6fa5;
+            padding-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1a1f2e;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th {
+            background-color: #2d3b4f;
+            color: #ffd966;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #2a3440;
+            font-size: 0.9em;
+        }
+        
+        tr:hover {
+            background-color: #252e3f;
+        }
+        
+        .coordinates {
+            font-family: 'Courier New', monospace;
+            color: #9cd9f0;
+        }
+        
+        .redshift {
+            color: #b5e6b5;
+            font-weight: 500;
+        }
+        
+        .r50 {
+            color: #f7c5a8;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: right;
+            color: #888;
+            font-size: 0.8em;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+            padding: 10px;
+            width: 300px;
+            border-radius: 4px;
+            border: 1px solid #4a6fa5;
+            background-color: #1a1f2e;
+            color: #e0e0e0;
+        }
+        
+        .search-box::placeholder {
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌌 Astromorphlib Database</h1>
+        
+        <input type="text" id="searchInput" class="search-box" placeholder="Search by name or field..." onkeyup="filterTable()">
+        
+        <table id="objectsTable">
+            <thead>
+                <tr>
+                    <th>SNAME</th>
+                    <th>Name</th>
+                    <th>Field</th>
+                    <th>RA (degrees)</th>
+                    <th>DEC (degrees)</th>
+                    <th>Redshift</th>
+                    <th>R50 (pix)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>S00001</td>
+                    <td>NGC1344</td>
+                    <td>SPLUS-s24s34</td>
+                    <td class="coordinates">52.08196</td>
+                    <td class="coordinates">-31.06817</td>
+                    <td class="redshift">0.00414</td>
+                    <td class="r50">53.65902</td>
+                </tr>
+                <tr>
+                    <td>S00002</td>
+                    <td>ESO418-G008</td>
+                    <td>SPLUS-s24s35</td>
+                    <td class="coordinates">52.87771</td>
+                    <td class="coordinates">-30.21333</td>
+                    <td class="redshift">0.003987</td>
+                    <td class="r50">25.898617</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            📊 2 objects displayed | Last updated: 2026-03-05
+        </div>
+    </div>
+
+    <script>
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('objectsTable');
+            const tr = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < tr.length; i++) {
+                let display = false;
+                const tds = tr[i].getElementsByTagName('td');
+                for (let j = 0; j < tds.length; j++) {
+                    const td = tds[j];
+                    if (td) {
+                        const txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            display = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = display ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>
