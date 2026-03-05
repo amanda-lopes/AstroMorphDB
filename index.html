@@ -79,32 +79,51 @@
             font-size: 0.9em;
         }
         
-        tr:hover {
-            background-color: #252e3f;
+        tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
         
-        .coordinates {
-            font-family: 'Courier New', monospace;
-            color: #9cd9f0;
+        tbody tr:hover {
+            background-color: #3d4b5f;
+            transform: scale(1.002);
+            box-shadow: 0 2px 8px rgba(255, 217, 102, 0.2);
         }
         
-        .Redshift {
+        .value {
             color: #b5e6b5;
             font-weight: 500;
         }
         
         .footer {
             margin-top: 20px;
-            text-align: right;
+            text-align: center;
             color: #888;
             font-size: 0.8em;
+        }
+        
+        /* Tooltip style */
+        .click-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #2d3b4f;
+            color: #ffd966;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            border: 1px solid #4a6fa5;
+            opacity: 0.7;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🌌 Astromorphlib Database</h1>
-        <div class="cluster-name">Abell 1644</div>
+        
+        <!-- Centered cluster name -->
+        <div class="cluster-name">Fornax Cluster</div>
         
         <div style="overflow-x: auto;">
             <table id="objectsTable">
@@ -130,6 +149,9 @@
             <span id="objectCount">0</span> objects · <span id="lastUpdated"></span>
         </div>
     </div>
+    
+    <!-- Click hint -->
+    <div class="click-hint">👆 Click any galaxy for details</div>
 
     <script>
         let objects = [];
@@ -160,12 +182,12 @@
             const tableBody = document.getElementById('tableBody');
             
             let html = '';
-            data.forEach(item => {
-                html += '<tr>';
+            data.forEach((item, index) => {
+                html += `<tr onclick='openGalaxyWindow(${JSON.stringify(item).replace(/'/g, "\\'")})'>`;
                 html += `<td>${item.Name || ''}</td>`;
-                html += `<td class="Redshift">${item.RA || ''}</td>`;
-                html += `<td class="Redshift">${item.DEC || ''}</td>`;
-                html += `<td class="Redshift">${item.Redshift || ''}</td>`;
+                html += `<td class="value">${item.RA || ''}</td>`;
+                html += `<td class="value">${item.DEC || ''}</td>`;
+                html += `<td class="value">${item.Redshift || ''}</td>`;
                 html += '</tr>';
             });
             
@@ -203,6 +225,125 @@
             });
             
             displayData(objects);
+        }
+
+        function openGalaxyWindow(galaxy) {
+            // Create a new window with galaxy details
+            const detailsWindow = window.open('', '_blank', 'width=600,height=500,scrollbars=yes,resizable=yes');
+            
+            // Generate HTML for the galaxy details
+            const detailsHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${galaxy.Name || 'Galaxy'} - Details</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #0a0f1e;
+                            color: #e0e0e0;
+                            margin: 0;
+                            padding: 30px;
+                            line-height: 1.6;
+                        }
+                        h1 {
+                            color: #ffd966;
+                            border-bottom: 2px solid #4a6fa5;
+                            padding-bottom: 15px;
+                            margin-top: 0;
+                        }
+                        .galaxy-name {
+                            font-size: 2.2em;
+                            color: #ffd966;
+                            margin-bottom: 30px;
+                            text-align: center;
+                            font-weight: bold;
+                        }
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 25px;
+                            max-width: 500px;
+                            margin: 0 auto;
+                        }
+                        .info-item {
+                            background-color: #1a1f2e;
+                            border-radius: 10px;
+                            padding: 20px;
+                            text-align: center;
+                            border-left: 3px solid #ffd966;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                        }
+                        .info-label {
+                            color: #888;
+                            font-size: 0.9em;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            margin-bottom: 10px;
+                        }
+                        .info-value {
+                            color: #9cd9f0;
+                            font-size: 1.6em;
+                            font-weight: bold;
+                            font-family: 'Courier New', monospace;
+                        }
+                        .info-value.z-value {
+                            color: #b5e6b5;
+                        }
+                        .close-btn {
+                            display: block;
+                            width: 120px;
+                            margin: 40px auto 20px;
+                            padding: 12px 24px;
+                            background-color: #4a6fa5;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 1em;
+                            font-weight: 500;
+                            text-align: center;
+                        }
+                        .close-btn:hover {
+                            background-color: #5a7fb5;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="galaxy-name">✨ ${galaxy.Name || 'Unnamed Galaxy'}</div>
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Right Ascension</div>
+                            <div class="info-value">${galaxy.RA || '—'}°</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Declination</div>
+                            <div class="info-value">${galaxy.DEC || '—'}°</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Redshift (z)</div>
+                            <div class="info-value z-value">${galaxy.Redshift || '—'}</div>
+                        </div>
+                    </div>
+                                        
+                    <button class="close-btn" onclick="window.close()">Close Window</button>
+                    
+                    <script>
+                        // Auto-close when pressing Escape key
+                        document.addEventListener('keydown', function(e) {
+                            if (e.key === 'Escape') {
+                                window.close();
+                            }
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            // Write the HTML to the new window
+            detailsWindow.document.write(detailsHTML);
+            detailsWindow.document.close();
         }
 
         window.onload = loadCSV;
