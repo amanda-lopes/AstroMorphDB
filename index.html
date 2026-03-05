@@ -259,6 +259,40 @@
                             text-align: center;
                             font-weight: bold;
                         }
+                         /* Image section */
+                        .image-section {
+                            display: flex;
+                            justify-content: center;
+                            margin-bottom: 25px;
+                        }
+                        .galaxy-image {
+                            max-width: 400px;
+                            max-height: 300px;
+                            border-radius: 10px;
+                            border: 2px solid #4a6fa5;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+                            background-color: #1a1f2e;
+                            padding: 5px;
+                        }
+                
+                        .no-image {
+                            width: 400px;
+                            height: 200px;
+                            background-color: #1a1f2e;
+                            border-radius: 10px;
+                            border: 2px dashed #4a6fa5;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            color: #888;
+                            gap: 10px;
+                        }
+                
+                        .no-image span {
+                            font-size: 3em;
+                            color: #4a6fa5;
+                        }
                         .info-row {
                             display: flex;
                             justify-content: center;
@@ -327,6 +361,20 @@
                             <div class="info-value z-value">${galaxy.Redshift || '—'}</div>
                         </div>
                     </div>
+                    <!-- Image Section -->
+                    <div class="image-section">
+                    <!-- Try to load image from local folder or URL -->
+                    <img class="galaxy-image" 
+                         src="images/${galaxy.Name || galaxy.SNAME}.jpg" 
+                         alt="${galaxy.Name}"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div class="no-image" style="display: none;">
+                        <span>🖼️</span>
+                        <div>No image available</div>
+                        <div style="font-size: 0.8em;">${galaxy.Name}</div>
+                    </div>
+                </div>
                                         
                     <button class="close-btn" onclick="window.close()">Close Window</button>
                     
