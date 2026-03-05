@@ -163,8 +163,8 @@
             data.forEach(item => {
                 html += '<tr>';
                 html += `<td>${item.Name || ''}</td>`;
-                html += `<td class="Redshift">${item['RA (deg)'] || ''}</td>`;
-                html += `<td class="Redshift">${item['DEC (de)'] || ''}</td>`;
+                html += `<td class="Redshift">${item.RA || ''}</td>`;
+                html += `<td class="Redshift">${item.DEC || ''}</td>`;
                 html += `<td class="Redshift">${item.Redshift || ''}</td>`;
                 html += '</tr>';
             });
