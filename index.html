@@ -75,31 +75,12 @@
             color: #b5e6b5;
             font-weight: 500;
         }
-                
+        
         .footer {
             margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-align: right;
             color: #888;
             font-size: 0.8em;
-        }
-        
-        .stats {
-            background-color: #1a1f2e;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border-left: 3px solid #ffd966;
-        }
-        
-        .error {
-            color: #ff8a8a;
-            background-color: #3f2b2b;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border-left: 3px solid #ff6b6b;
         }
     </style>
 </head>
@@ -107,15 +88,9 @@
     <div class="container">
         <h1>🌌 Astromorphlib Database</h1>
         
-        <div id="stats" class="stats">
-            Loading data...
-        </div>
-        
-        <div id="errorMessage" class="error" style="display: none;"></div>
-        
         <div style="overflow-x: auto;">
             <table id="objectsTable">
-                <thead id="tableHeader">
+                <thead>
                     <tr>
                         <th onclick="sortTable(0)">Name</th>
                         <th onclick="sortTable(1)">RA (degrees)</th>
@@ -126,7 +101,7 @@
                 <tbody id="tableBody">
                     <tr>
                         <td colspan="4" style="text-align: center; padding: 50px;">
-                            ⏳ Loading data from CSV...
+                            Loading...
                         </td>
                     </tr>
                 </tbody>
@@ -134,80 +109,37 @@
         </div>
         
         <div class="footer">
-            <span id="lastUpdated"></span>
-            <span>📊 <span id="objectCount">0</span> objects | Source: data.csv</span>
+            <span id="objectCount">0</span> objects · <span id="lastUpdated"></span>
         </div>
     </div>
 
     <script>
-        let originalData = [];
-        let filteredData = [];
+        let objects = [];
         let sortColumn = -1;
         let sortDirection = 'asc';
 
         async function loadCSV() {
-            const tableBody = document.getElementById('tableBody');
-            const errorDiv = document.getElementById('errorMessage');
-            const statsDiv = document.getElementById('stats');
+            const response = await fetch('data.csv');
+            const csvText = await response.text();
             
-            try {
-                // Show loading state
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 50px;">⏳ Loading CSV data...</td></tr>';
-                errorDiv.style.display = 'none';
-                
-                // Fetch the CSV file
-                const response = await fetch('data.csv');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const csvText = await response.text();
-                
-                // Parse CSV
-                const rows = csvText.trim().split('\n');
-                const headers = rows[0].split(',').map(h => h.trim());
-                
-                // Parse data rows
-                originalData = rows.slice(1).map(row => {
-                    const values = row.split(',').map(v => v.trim());
-                    return headers.reduce((obj, header, index) => {
-                        obj[header] = values[index];
-                        return obj;
-                    }, {});
-                });
-                
-                filteredData = [...originalData];
-                
-                // Update stats
-                statsDiv.innerHTML = `✅ Successfully loaded ${originalData.length} objects from CSV`;
-                
-                // Display the data
-                displayData(filteredData);
-                
-                // Update footer
-                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
-                document.getElementById('objectCount').textContent = filteredData.length;
-                
-            } catch (error) {
-                console.error('Error loading CSV:', error);
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = `❌ Error loading CSV: ${error.message}. Make sure data.csv exists in the same directory.`;
-                statsDiv.innerHTML = '❌ Failed to load data';
-                
-                tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 50px; color: #ff8a8a;">
-                    ❌ Error loading data. Please check console.
-                </td></tr>`;
-            }
+            const rows = csvText.trim().split('\n');
+            const headers = rows[0].split(',').map(h => h.trim());
+            
+            objects = rows.slice(1).map(row => {
+                const values = row.split(',').map(v => v.trim());
+                return headers.reduce((obj, header, index) => {
+                    obj[header] = values[index];
+                    return obj;
+                }, {});
+            });
+            
+            displayData(objects);
+            document.getElementById('lastUpdated').innerHTML = new Date().toLocaleString();
+            document.getElementById('objectCount').textContent = objects.length;
         }
 
         function displayData(data) {
             const tableBody = document.getElementById('tableBody');
-            
-            if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 50px;">No objects found</td></tr>';
-                return;
-            }
             
             let html = '';
             data.forEach(item => {
@@ -233,19 +165,13 @@
                 sortDirection = 'asc';
             }
             
-            sortData(columnIndex, true);
-        }
-
-        function sortData(columnIndex, display = true) {
-            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
             const columnName = headers[columnIndex];
             
-            filteredData.sort((a, b) => {
+            objects.sort((a, b) => {
                 let valA = a[columnName];
                 let valB = b[columnName];
                 
-                // Try numeric comparison for numeric columns
-                if (columnIndex >= 1) { // RA, DEC, z (all numeric except Name)
+                if (columnIndex >= 1) {
                     valA = parseFloat(valA) || 0;
                     valB = parseFloat(valB) || 0;
                 } else {
@@ -258,12 +184,9 @@
                 return 0;
             });
             
-            if (display) {
-                displayData(filteredData);
-            }
+            displayData(objects);
         }
 
-        // Auto-load CSV when page loads
         window.onload = loadCSV;
     </script>
 </body>
