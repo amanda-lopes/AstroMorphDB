@@ -138,7 +138,21 @@
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>🌌 Astromorphlib Database </h1>
         
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" class="search-box" placeholder="Search by any field..." onkeyup="filterTable()">
+            <button class="load-btn" onclick="loadCSV()">🔄 Reload Data</button>
+        </div>
+        
+        <div id="stats" class="stats">
+            Loading data...
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>      
+
+    
         <div style="overflow-x: auto;">
             <table id="objectsTable">
                 <thead id="tableHeader">
