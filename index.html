@@ -85,41 +85,12 @@
             font-size: 0.8em;
         }
         
-        .search-box {
-            margin-bottom: 20px;
-            padding: 10px;
-            width: 300px;
-            border-radius: 4px;
-            border: 1px solid #4a6fa5;
-            background-color: #1a1f2e;
-            color: #e0e0e0;
-            font-size: 1em;
-        }
-        
-        .search-box::placeholder {
-            color: #888;
-        }
-        
         .stats {
             background-color: #1a1f2e;
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 20px;
             border-left: 3px solid #ffd966;
-        }
-        
-        .load-btn {
-            background-color: #4a6fa5;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        
-        .load-btn:hover {
-            background-color: #5a7fb5;
         }
         
         .error {
@@ -130,20 +101,11 @@
             margin-bottom: 20px;
             border-left: 3px solid #ff6b6b;
         }
-        
-        .sort-indicator {
-            margin-left: 5px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌌 Astromorphlib Database </h1>
-        
-        <div style="margin-bottom: 20px;">
-            <input type="text" id="searchInput" class="search-box" placeholder="Search by any field..." onkeyup="filterTable()">
-            <button class="load-btn" onclick="loadCSV()">🔄 Reload Data</button>
-        </div>
+        <h1>🌌 Astromorphlib Database</h1>
         
         <div id="stats" class="stats">
             Loading data...
@@ -163,7 +125,7 @@
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 50px;">
+                        <td colspan="4" style="text-align: center; padding: 50px;">
                             ⏳ Loading data from CSV...
                         </td>
                     </tr>
@@ -173,7 +135,7 @@
         
         <div class="footer">
             <span id="lastUpdated"></span>
-            <span>📊 <span id="objectCount">0</span> objects displayed | Source: data.csv</span>
+            <span>📊 <span id="objectCount">0</span> objects | Source: data.csv</span>
         </div>
     </div>
 
@@ -190,7 +152,7 @@
             
             try {
                 // Show loading state
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">⏳ Loading CSV data...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 50px;">⏳ Loading CSV data...</td></tr>';
                 errorDiv.style.display = 'none';
                 
                 // Fetch the CSV file
@@ -233,7 +195,7 @@
                 errorDiv.textContent = `❌ Error loading CSV: ${error.message}. Make sure data.csv exists in the same directory.`;
                 statsDiv.innerHTML = '❌ Failed to load data';
                 
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 50px; color: #ff8a8a;">
+                tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 50px; color: #ff8a8a;">
                     ❌ Error loading data. Please check console.
                 </td></tr>`;
             }
@@ -243,7 +205,7 @@
             const tableBody = document.getElementById('tableBody');
             
             if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">No matching objects found</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 50px;">No objects found</td></tr>';
                 return;
             }
             
@@ -259,27 +221,6 @@
             
             tableBody.innerHTML = html;
             document.getElementById('objectCount').textContent = data.length;
-        }
-
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            if (!searchTerm) {
-                filteredData = [...originalData];
-            } else {
-                filteredData = originalData.filter(item => {
-                    return Object.values(item).some(value => 
-                        String(value).toLowerCase().includes(searchTerm)
-                    );
-                });
-            }
-            
-            // Apply current sort if any
-            if (sortColumn !== -1) {
-                sortData(sortColumn, false);
-            } else {
-                displayData(filteredData);
-            }
         }
 
         function sortTable(columnIndex) {
@@ -304,7 +245,7 @@
                 let valB = b[columnName];
                 
                 // Try numeric comparison for numeric columns
-                if (columnIndex >= 3) { // Coordinates, z
+                if (columnIndex >= 1) { // RA, DEC, z (all numeric except Name)
                     valA = parseFloat(valA) || 0;
                     valB = parseFloat(valB) || 0;
                 } else {
