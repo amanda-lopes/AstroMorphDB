@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1800px;
+            max-width: 1500px;
             margin: 0 auto;
             overflow-x: auto;
         }
@@ -225,7 +225,6 @@
                 
                 // Update footer
                 document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleString()}`;
-                document.getElementById('objectCount').textContent = filteredData.length;
                 
             } catch (error) {
                 console.error('Error loading CSV:', error);
@@ -253,7 +252,7 @@
                 html += `<td>${item.Name || ''}</td>`;
                 html += `<td class="coordinates">${item['RA(degrees)'] || ''}</td>`;
                 html += `<td class="coordinates">${item['DEC(degrees)'] || ''}</td>`;
-                html += `<td class="z">${item.Redshift || ''}</td>`;
+                html += `<td class="z">${item.z || ''}</td>`;
                 html += '</tr>';
             });
             
