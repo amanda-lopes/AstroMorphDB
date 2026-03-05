@@ -160,8 +160,8 @@
                 <thead id="tableHeader">
                     <tr>
                         <th onclick="sortTable(0)">Name</th>
-                        <th onclick="sortTable(1)">RA (degrees)</th>
-                        <th onclick="sortTable(2)">DEC (degrees)</th>
+                        <th onclick="sortTable(1)">RA (deg)</th>
+                        <th onclick="sortTable(2)">DEC (deg)</th>
                         <th onclick="sortTable(3)">z</th>
                     </tr>
                 </thead>
@@ -287,7 +287,7 @@
         }
 
         function sortTable(columnIndex) {
-            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            const headers = ['Name', 'RA(deg)', 'DEC(deg)', 'z'];
             
             if (sortColumn === columnIndex) {
                 sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -300,7 +300,7 @@
         }
 
         function sortData(columnIndex, display = true) {
-            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            const headers = ['Name', 'RA(deg)', 'DEC(deg)', 'z'];
             const columnName = headers[columnIndex];
             
             filteredData.sort((a, b) => {
