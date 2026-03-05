@@ -71,7 +71,7 @@
             color: #9cd9f0;
         }
         
-        .z {
+        .Redshift {
             color: #b5e6b5;
             font-weight: 500;
         }
@@ -95,7 +95,7 @@
                         <th onclick="sortTable(0)">Name</th>
                         <th onclick="sortTable(1)">RA (degrees)</th>
                         <th onclick="sortTable(2)">DEC (degrees)</th>
-                        <th onclick="sortTable(3)">z</th>
+                        <th onclick="sortTable(3)">Redshift</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -147,7 +147,7 @@
                 html += `<td>${item.Name || ''}</td>`;
                 html += `<td class="coordinates">${item['RA(degrees)'] || ''}</td>`;
                 html += `<td class="coordinates">${item['DEC(degrees)'] || ''}</td>`;
-                html += `<td class="z">${item.z || ''}</td>`;
+                html += `<td class="Redshift">${item.z || ''}</td>`;
                 html += '</tr>';
             });
             
@@ -156,7 +156,7 @@
         }
 
         function sortTable(columnIndex) {
-            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'z'];
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'Redshift'];
             
             if (sortColumn === columnIndex) {
                 sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
