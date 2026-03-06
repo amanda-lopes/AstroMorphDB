@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astromorphlib Database</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #0a0f1e;
+            color: #e0e0e0;
+        }
+        
+        h1 {
+            color: #ffd966;
+            border-bottom: 2px solid #4a6fa5;
+            padding-bottom: 10px;
+            text-align: center;
+            font-size: 3em;
+        }
+        
+        .cluster-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd966;
+            margin: 25px 0 20px 0;
+            padding: 12px 20px;
+            background: linear-gradient(90deg, transparent, #2d3b4f, transparent);
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border-radius: 30px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1a1f2e;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th {
+            background-color: #2d3b4f;
+            color: #ffd966;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        th:hover {
+            background-color: #3d4b5f;
+        }
+        
+        th:after {
+            content: ' ↕️';
+            font-size: 0.9em;
+            opacity: 0.5;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #2a3440;
+            font-size: 1.1em;
+        }
+        
+        tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        tbody tr:hover {
+            background-color: #3d4b5f;
+            transform: scale(1.002);
+            box-shadow: 0 2px 8px rgba(255, 217, 102, 0.2);
+        }
+        
+        .value {
+            color: #b5e6b5;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #888;
+            font-size: 0.8em;
+        }
+        
+        /* Tooltip style */
+        .click-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #2d3b4f;
+            color: #ffd966;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            border: 1px solid #4a6fa5;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌌 Astromorphlib Database</h1>
+        
+        <!-- Centered cluster name -->
+        <div class="cluster-name">Cluster: Abell 1644</div>
+        
+        <div style="overflow-x: auto;">
+            <table id="objectsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Name</th>
+                        <th onclick="sortTable(1)">RA (degrees)</th>
+                        <th onclick="sortTable(2)">DEC (degrees)</th>
+                        <th onclick="sortTable(3)">Redshift</th>
+                        <th onclick="sortTable(4)">Distance</th>
+                        <th onclick="sortTable(5)">C</th>
+                        <th onclick="sortTable(6)">A</th>
+                        <th onclick="sortTable(7)">Gini</th>
+                        <th onclick="sortTable(8)">M20</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 50px;">
+                            Loading...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <span id="objectCount">0</span> objects · <span id="lastUpdated"></span>
+        </div>
+    </div>
+    
+    <!-- Click hint -->
+    <div class="click-hint">👆 Click any galaxy for details</div>
+
+    <script>
+        let objects = [];
+        let sortColumn = -1;
+        let sortDirection = 'asc';
+
+        async function loadCSV() {
+            const response = await fetch('A1644_data.csv');
+            const csvText = await response.text();
+            
+            const rows = csvText.trim().split('\n');
+            const headers = rows[0].split(',').map(h => h.trim());
+            
+            objects = rows.slice(1).map(row => {
+                const values = row.split(',').map(v => v.trim());
+                return headers.reduce((obj, header, index) => {
+                    obj[header] = values[index];
+                    return obj;
+                }, {});
+            });
+            
+            displayData(objects);
+            document.getElementById('lastUpdated').innerHTML = new Date().toLocaleString();
+            document.getElementById('objectCount').textContent = objects.length;
+        }
+
+        function displayData(data) {
+            const tableBody = document.getElementById('tableBody');
+            
+            let html = '';
+            data.forEach((item, index) => {
+                html += `<tr onclick='openGalaxyWindow(${JSON.stringify(item).replace(/'/g, "\\'")})'>`;
+                html += `<td>${item.Name || ''}</td>`;
+                html += `<td class="value">${item.RA || ''}</td>`;
+                html += `<td class="value">${item.DEC || ''}</td>`;
+                html += `<td class="value">${item.Redshift || ''}</td>`;
+                html += `<td class="value">${item.Distance || ''}</td>`;
+                html += `<td class="value">${item.C || ''}</td>`;
+                html += `<td class="value">${item.A || ''}</td>`;
+                html += `<td class="value">${item.Gini || ''}</td>`;
+                html += `<td class="value">${item.M20 || ''}</td>`;
+                html += '</tr>';
+            });
+            
+            tableBody.innerHTML = html;
+            document.getElementById('objectCount').textContent = data.length;
+        }
+
+        function sortTable(columnIndex) {
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'Redshift', 'Distance', 'C', 'A', 'Gini', 'M20'];
+            
+            if (sortColumn === columnIndex) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = columnIndex;
+                sortDirection = 'asc';
+            }
+            
+            const columnName = headers[columnIndex];
+            
+            objects.sort((a, b) => {
+                let valA = a[columnName];
+                let valB = b[columnName];
+                
+                if (columnIndex >= 1) {
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+                
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            displayData(objects);
+        }
+
+        function openGalaxyWindow(galaxy) {
+            // Create a new window with galaxy details
+            const detailsWindow = window.open('', '_blank', 'width=1800,height=1300,scrollbars=yes,resizable=yes');
+            
+            // Generate HTML for the galaxy details
+            const detailsHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${galaxy.Name || 'Galaxy'} - Details</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #0a0f1e;
+                            color: #e0e0e0;
+                            margin: 0;
+                            padding: 30px;
+                            line-height: 1.6;
+                        }
+                        h1 {
+                            color: #ffd966;
+                            border-bottom: 2px solid #4a6fa5;
+                            padding-bottom: 15px;
+                            margin-top: 0;
+                        }
+                        .galaxy-name {
+                            font-size: 2.2em;
+                            color: #ffd966;
+                            margin-bottom: 30px;
+                            text-align: center;
+                            font-weight: bold;
+                        }
+                         /* Image section */
+                        .image-section {
+                            display: flex;
+                            justify-content: center;
+                            margin-bottom: 25px;
+                        }
+                        .galaxy-image {
+                            max-width: 400px;
+                            max-height: 300px;
+                            border-radius: 10px;
+                            border: 2px solid #4a6fa5;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+                            background-color: #1a1f2e;
+                            padding: 5px;
+                        }
+                
+                        .no-image {
+                            width: 400px;
+                            height: 200px;
+                            background-color: #1a1f2e;
+                            border-radius: 10px;
+                            border: 2px dashed #4a6fa5;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            color: #888;
+                            gap: 10px;
+                        }
+                
+                        .no-image span {
+                            font-size: 3em;
+                            color: #4a6fa5;
+                        }
+                        .info-row {
+                            display: flex;
+                            justify-content: center;
+                            gap: 18px;
+                            margin-bottom: 30px;
+                            flex-wrap: wrap;  /* Wraps on small screens */
+                        }
+                        .info-item {
+                            background-color: #1a1f2e;
+                            border-radius: 8px;
+                            padding: 12px 22px;
+                            text-align: center;
+                            border-left: 3px solid #ffd966;
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+                            min-width: 100px;
+                        }
+                        .info-label {
+                            color: #888;
+                            font-size: 0.9em;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            margin-bottom: 10px;
+                        }
+                        .info-value {
+                            color: #9cd9f0;
+                            font-size: 1.1em;
+                            font-weight: bold;
+                            font-family: 'Courier New', monospace;
+                        }
+                        .info-value.z-value {
+                            color: #b5e6b5;
+                        }
+                        .close-btn {
+                            display: block;
+                            width: 120px;
+                            margin: 40px auto 20px;
+                            padding: 12px 24px;
+                            background-color: #4a6fa5;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 1em;
+                            font-weight: 500;
+                            text-align: center;
+                        }
+                        .close-btn:hover {
+                            background-color: #5a7fb5;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="galaxy-name"> Galaxy ID: ${galaxy.Name || 'Unnamed Galaxy'}</div>
+                    
+                    <div class="info-row">
+                        <div class="info-item">
+                            <div class="info-label">RA</div>
+                            <div class="info-value">${galaxy.RA || '—'}°</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">DEC</div>
+                            <div class="info-value">${galaxy.DEC || '—'}°</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Redshift (z)</div>
+                            <div class="info-value z-value">${galaxy.Redshift || '—'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Distance to center</div>
+                            <div class="info-value">${galaxy.Distance || '—'}</div>
+                        </div>
+                    </div>
+                    <!-- Image Section -->
+                    <div class="image-section">
+                    <!-- Try to load image from local folder or URL -->
+                    <img class="galaxy-image" 
+                         src="images/fig_${galaxy.Name || galaxy.SNAME}.jpeg" 
+                         alt="${galaxy.Name}"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <div class="no-image" style="display: none;">
+                        <span>🖼️</span>
+                        <div>No image available</div>
+                        <div style="font-size: 0.8em;">${galaxy.Name}</div>
+                    </div>
+                </div>
+                                        
+                    <button class="close-btn" onclick="window.close()">Close Window</button>
+                    
+                    <script>
+                        // Auto-close when pressing Escape key
+                        document.addEventListener('keydown', function(e) {
+                            if (e.key === 'Escape') {
+                                window.close();
+                            }
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            // Write the HTML to the new window
+            detailsWindow.document.write(detailsHTML);
+            detailsWindow.document.close();
+        }
+
+        window.onload = loadCSV;
+    </script>
+</body>
+</html>
