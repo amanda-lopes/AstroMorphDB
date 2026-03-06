@@ -166,7 +166,7 @@
         let sortDirection = 'asc';
 
         async function loadCSV() {
-            const response = await fetch('data.csv');
+            const response = await fetch('MKW4_data.csv');
             const csvText = await response.text();
             
             const rows = csvText.trim().split('\n');
