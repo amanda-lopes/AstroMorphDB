@@ -135,6 +135,11 @@
                         <th onclick="sortTable(1)">RA (degrees)</th>
                         <th onclick="sortTable(2)">DEC (degrees)</th>
                         <th onclick="sortTable(3)">Redshift</th>
+                        <th onclick="sortTable(4)">Distance</th>
+                        <th onclick="sortTable(5)">C</th>
+                        <th onclick="sortTable(6)">A</th>
+                        <th onclick="sortTable(7)">Gini</th>
+                        <th onclick="sortTable(8)">M20</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -190,6 +195,11 @@
                 html += `<td class="value">${item.RA || ''}</td>`;
                 html += `<td class="value">${item.DEC || ''}</td>`;
                 html += `<td class="value">${item.Redshift || ''}</td>`;
+                html += `<td class="value">${item.Distance || ''}</td>`;
+                html += `<td class="value">${item.C || ''}</td>`;
+                html += `<td class="value">${item.A || ''}</td>`;
+                html += `<td class="value">${item.Gini || ''}</td>`;
+                html += `<td class="value">${item.M20 || ''}</td>`;
                 html += '</tr>';
             });
             
@@ -198,7 +208,7 @@
         }
 
         function sortTable(columnIndex) {
-            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'Redshift'];
+            const headers = ['Name', 'RA(degrees)', 'DEC(degrees)', 'Redshift', 'Distance', 'C', 'A', 'Gini', 'M20'];
             
             if (sortColumn === columnIndex) {
                 sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
